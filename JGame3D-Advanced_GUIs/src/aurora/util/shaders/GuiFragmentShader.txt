@@ -1,0 +1,22 @@
+#version 130
+
+in vec2 textureCoords;
+
+out vec4 out_Color;
+
+uniform vec4 guiColor;
+uniform float isPicture;
+uniform sampler2D guiTexture;
+
+void main(void){
+	vec4 picColor = texture(guiTexture, textureCoords);
+	
+	if(isPicture == 0){
+	
+		out_Color =	guiColor;
+	}
+
+	if(isPicture == 1){
+		out_Color = vec4(guiColor.x + picColor.x, guiColor.y + picColor.y, guiColor.z + picColor.z, 1);
+	}
+}

@@ -1,0 +1,67 @@
+#version 130
+
+in vec2 pass_textureCoords;
+in vec3 surfaceNormal;
+in vec3 toLightVector[4];
+in float visibility;
+
+out vec4 out_color;
+
+uniform sampler2D backgroundTexture;
+uniform sampler2D rTexture;
+uniform sampler2D gTexture;
+uniform sampler2D bTexture;
+uniform vec3 lightColor[4];
+uniform vec3 paint[1024];
+uniform vec3 skyColor;
+uniform int active;
+
+void main(void){
+
+	float i = pass_textureCoords.x;
+	float j = pass_textureCoords.y;
+	
+	vec3 p = paint[int( i * j )];
+	vec4 blendMapColor = vec4(0, p.y, p.z, 1.0);
+
+	float backTextureAmount = 1 - (blendMapColor.r + blendMapColor.g + blendMapColor.b);
+	vec2 tiledCoords = pass_textureCoords * 40.0;
+	vec4 backTextureColor = texture2D(backgroundTexture, tiledCoords) * backTextureAmount;
+	vec4 rTextureColor;
+	vec4 gTextureColor;
+	vec4 bTextureColor;
+	vec4 totalColor = backTextureColor;
+	
+	if(active > 1){
+		rTextureColor = texture2D(rTexture, tiledCoords) * blendMapColor.r;
+		totalColor = totalColor + rTextureColor;
+	}
+	
+	if(active > 2){
+		gTextureColor = texture2D(gTexture, tiledCoords) * blendMapColor.g;
+		totalColor = totalColor + gTextureColor;
+	}
+	
+	if(active > 3){
+		bTextureColor = texture2D(bTexture, tiledCoords) * blendMapColor.b;
+		totalColor = totalColor + bTextureColor;
+	}
+	
+	vec3 totalDiffuse = vec3(0.0);	
+	vec3 unitNormal = normalize(surfaceNormal);
+		
+	for(int i = 0; i < 4; i++){	
+		vec3 unitLightVector = normalize(toLightVector[i]);
+		
+		float nDotl = dot(unitNormal,unitLightVector);
+		float brightness = max(nDotl, 0.0);
+		
+		totalDiffuse = totalDiffuse + brightness * lightColor[i];
+	}
+	
+	totalDiffuse = max(totalDiffuse, 0.25);
+	
+	out_color = vec4(totalDiffuse, 1.0) * totalColor;
+	
+	out_color = mix(vec4(skyColor,1.0),out_color, visibility);
+}

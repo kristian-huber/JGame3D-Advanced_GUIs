@@ -1,0 +1,4 @@
+To do List:
+
+1.) As always if there is time, clean up the code
+2.) World Generation
